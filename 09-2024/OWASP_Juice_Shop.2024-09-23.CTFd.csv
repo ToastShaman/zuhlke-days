@@ -1,0 +1,1475 @@
+name,description,category,value,type,state,max_attempts,flags,tags,hints,type_data
+API-only XSS,"Perform a <i>persisted</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code> without using the frontend application at all. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 3)",XSS,450,standard,visible,0,f94113c07b6e82fa8ba90369088818711423838a,"Danger Zone","You need to work with the server-side API directly. Try different HTTP verbs on different entities exposed through the API.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_persisted_xss_attack_without_using_the_frontend_application_at_all,<pre><code>ngAfterViewInit () {
+    const products = this.productService.search('')
+    const quantities = this.quantityService.getAll()
+    forkJoin([quantities٬ products]).subscribe(([quantities٬ products]) => {
+      const dataTable: TableEntry[] = []
+      this.tableData = products
+      this.trustProductDescription(products)
+      for (const product of products) {
+        dataTable.push({
+          name: product.name٬
+          price: product.price٬
+          deluxePrice: product.deluxePrice٬
+          id: product.id٬
+          image: product.image٬
+          description: product.description
+        })
+      }
+      for (const quantity of quantities) {
+        const entry = dataTable.find((dataTableEntry) => {
+          return dataTableEntry.id === quantity.ProductId
+        })
+        if (entry === undefined) {
+          continue
+        }
+        entry.quantity = quantity.quantity
+      }
+      this.dataSource = new MatTableDataSource<TableEntry>(dataTable)
+      for (let i = 1; i <= Math.ceil(this.dataSource.data.length / 12); i++) {
+        this.pageSizeOptions.push(i * 12)
+      }
+      this.paginator.pageSizeOptions = this.pageSizeOptions
+      this.dataSource.paginator = this.paginator
+      this.gridDataSource = this.dataSource.connect()
+      this.resultsLength = this.dataSource.data.length
+      this.filterTable()
+      this.routerSubscription = this.router.events.subscribe(() => {
+        this.filterTable()
+      })
+      if (window.innerWidth < 2600) {
+        this.breakpoint = 4
+        if (window.innerWidth < 1740) {
+          this.breakpoint = 3
+          if (window.innerWidth < 1280) {
+            this.breakpoint = 2
+            if (window.innerWidth < 850) {
+              this.breakpoint = 1
+            }
+          }
+        }
+      } else {
+        this.breakpoint = 6
+      }
+      this.cdRef.detectChanges()
+    }٬ (err) => { console.log(err) })
+  }
+
+  trustProductDescription (tableData: any[]) {
+    for (let i = 0; i < tableData.length; i++) {
+      tableData[i].description = this.sanitizer.bypassSecurityTrustHtml(tableData[i].description)
+    }
+  }</code></pre>",
+Access Log,"Gain access to any access log file of the server. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,ba33e22ac92492931305ea3483a3a0c8210e9ddb,,"Who would want a server access log to be accessible through a web application?,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_gain_access_to_any_access_log_file_of_the_server,<pre><code>/* /ftp directory browsing and file download */
+  app.use('/ftp'٬ serveIndexMiddleware٬ serveIndex('ftp'٬ { icons: true }))
+  app.use('/ftp(?!/quarantine)/:file'٬ fileServer())
+  app.use('/ftp/quarantine/:file'٬ quarantineServer())
+
+  app.use('/.well-known'٬ serveIndexMiddleware٬ serveIndex('.well-known'٬ { icons: true٬ view: 'details' }))
+  app.use('/.well-known'٬ express.static('.well-known'))
+
+  /* /encryptionkeys directory browsing */
+  app.use('/encryptionkeys'٬ serveIndexMiddleware٬ serveIndex('encryptionkeys'٬ { icons: true٬ view: 'details' }))
+  app.use('/encryptionkeys/:file'٬ keyServer())
+
+  /* /logs directory browsing */
+  app.use('/support/logs'٬ serveIndexMiddleware٬ serveIndex('logs'٬ { icons: true٬ view: 'details' }))
+  app.use('/support/logs/:file'٬ logFileServer())
+
+  /* Swagger documentation for B2B v2 endpoints */
+  app.use('/api-docs'٬ swaggerUi.serve٬ swaggerUi.setup(swaggerDocument))
+
+  app.use(express.static(path.resolve('frontend/dist/frontend')))
+  app.use(cookieParser('kekse'))</code></pre>",
+Admin Registration,"Register as a user with administrator privileges. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,adf858a9828123061257cba29e3f34da87b23962,,"You have to assign the unassignable.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_register_as_a_user_with_administrator_privileges,<pre><code>/* Generated API endpoints */
+  finale.initialize({ app٬ sequelize })
+
+  const autoModels = [
+    { name: 'User'٬ exclude: ['password'٬ 'totpSecret']٬ model: UserModel }٬
+    { name: 'Product'٬ exclude: []٬ model: ProductModel }٬
+    { name: 'Feedback'٬ exclude: []٬ model: FeedbackModel }٬
+    { name: 'BasketItem'٬ exclude: []٬ model: BasketItemModel }٬
+    { name: 'Challenge'٬ exclude: []٬ model: ChallengeModel }٬
+    { name: 'Complaint'٬ exclude: []٬ model: ComplaintModel }٬
+    { name: 'Recycle'٬ exclude: []٬ model: RecycleModel }٬
+    { name: 'SecurityQuestion'٬ exclude: []٬ model: SecurityQuestionModel }٬
+    { name: 'SecurityAnswer'٬ exclude: []٬ model: SecurityAnswerModel }٬
+    { name: 'Address'٬ exclude: []٬ model: AddressModel }٬
+    { name: 'PrivacyRequest'٬ exclude: []٬ model: PrivacyRequestModel }٬
+    { name: 'Card'٬ exclude: []٬ model: CardModel }٬
+    { name: 'Quantity'٬ exclude: []٬ model: QuantityModel }
+  ]
+
+  for (const { name٬ exclude٬ model } of autoModels) {
+    const resource = finale.resource({
+      model٬
+      endpoints: [`/api/${name}s`٬ `/api/${name}s/:id`]٬
+      excludeAttributes: exclude٬
+      pagination: false
+    })
+
+    // create a wallet when a new user is registered using API
+    if (name === 'User') {
+      resource.create.send.before((req: Request٬ res: Response٬ context: { instance: { id: any }٬ continue: any }) => {
+        WalletModel.create({ UserId: context.instance.id }).catch((err: unknown) => {
+          console.log(err)
+        })
+        return context.continue
+      })
+    }</code></pre>",
+Admin Section,"Access the administration section of the store. (Difficulty Level: 2)",Broken Access Control,250,standard,visible,0,71aeb3b0bf01cc6e488f0207bb62f79b41454a87,"Good for Demos","It is just slightly harder to find than the score board link.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_access_the_administration_section_of_the_store,<pre><code>const routes: Routes = [
+  {
+    path: 'administration'٬
+    component: AdministrationComponent٬
+    canActivate: [AdminGuard]
+  }٬
+  {
+    path: 'accounting'٬
+    component: AccountingComponent٬
+    canActivate: [AccountingGuard]
+  }٬
+  {
+    path: 'about'٬
+    component: AboutComponent
+  }٬
+  {
+    path: 'address/select'٬
+    component: AddressSelectComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/saved'٬
+    component: SavedAddressComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/create'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/edit/:addressId'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'delivery-method'٬
+    component: DeliveryMethodComponent
+  }٬
+  {
+    path: 'deluxe-membership'٬
+    component: DeluxeUserComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'saved-payment-methods'٬
+    component: SavedPaymentMethodsComponent
+  }٬
+  {
+    path: 'basket'٬
+    component: BasketComponent
+  }٬
+  {
+    path: 'order-completion/:id'٬
+    component: OrderCompletionComponent
+  }٬
+  {
+    path: 'contact'٬
+    component: ContactComponent
+  }٬
+  {
+    path: 'photo-wall'٬
+    component: PhotoWallComponent
+  }٬
+  {
+    path: 'complain'٬
+    component: ComplaintComponent
+  }٬
+  {
+    path: 'chatbot'٬
+    component: ChatbotComponent
+  }٬
+  {
+    path: 'order-summary'٬
+    component: OrderSummaryComponent
+  }٬
+  {
+    path: 'order-history'٬
+    component: OrderHistoryComponent
+  }٬
+  {
+    path: 'payment/:entity'٬
+    component: PaymentComponent
+  }٬
+  {
+    path: 'wallet'٬
+    component: WalletComponent
+  }٬
+  {
+    path: 'login'٬
+    component: LoginComponent
+  }٬
+  {
+    path: 'forgot-password'٬
+    component: ForgotPasswordComponent
+  }٬
+  {
+    path: 'recycle'٬
+    component: RecycleComponent
+  }٬
+  {
+    path: 'register'٬
+    component: RegisterComponent
+  }٬
+  {
+    path: 'search'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'hacking-instructor'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'score-board'٬
+    component: ScoreBoardComponent
+  }٬
+  {
+    path: 'track-result'٬
+    component: TrackResultComponent
+  }٬
+  {
+    path: 'track-result/new'٬
+    component: TrackResultComponent٬
+    data: {
+      type: 'new'
+    }
+  }٬
+  {
+    path: '2fa/enter'٬
+    component: TwoFactorAuthEnterComponent
+  }٬
+  {
+    path: 'privacy-security'٬
+    component: PrivacySecurityComponent٬
+    children: [
+      {
+        path: 'privacy-policy'٬
+        component: PrivacyPolicyComponent
+      }٬
+      {
+        path: 'change-password'٬
+        component: ChangePasswordComponent
+      }٬
+      {
+        path: 'two-factor-authentication'٬
+        component: TwoFactorAuthComponent
+      }٬
+      {
+        path: 'data-export'٬
+        component: DataExportComponent
+      }٬
+      {
+        path: 'last-login-ip'٬
+        component: LastLoginIpComponent
+      }
+    ]
+  }٬
+  {
+    path: 'juicy-nft'٬
+    component: NFTUnlockComponent
+  }٬
+  {
+    path: 'wallet-web3'٬
+    loadChildren: async () => await loadWeb3WalletModule()
+  }٬
+  {
+    path: 'web3-sandbox'٬
+    loadChildren: async () => await loadWeb3SandboxtModule()
+  }٬
+  {
+    path: 'bee-haven'٬
+    loadChildren: async () => await loadFaucetModule()
+  }٬
+   {
+    matcher: oauthMatcher٬
+    data: { params: (window.location.href).substr(window.location.href.indexOf('#')) }٬
+    component: OAuthComponent
+  }٬
+  {
+    matcher: tokenMatcher٬
+    component: TokenSaleComponent
+  }٬
+  {
+    path: '403'٬
+    component: ErrorPageComponent
+  }٬
+  {
+    path: '**'٬
+    component: SearchResultComponent
+  }
+]</code></pre>",
+Arbitrary File Write,"Overwrite the <a href=""/ftp/legal.md"">Legal Information</a> file. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 6)",Vulnerable Components,1350,standard,visible,0,7aec1a1f170062a5dc7f9d3502de999df9ff29df,"Danger Zone,Prerequisite","Look out for a tweet praising new functionality of the web shop. Then find a third party vulnerability associated with it.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_overwrite_the_legal_information_file",
+Bjoern's Favorite Pet,"Reset the password of Bjoern's OWASP account via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>the original answer</i> to his security question. (Difficulty Level: 3)",Broken Authentication,450,standard,visible,0,f88dde9f00ed45debda603f5efb317933809dee3,"OSINT","He might have trumpeted it on at least one occasion where a camera was running. Maybe elsewhere as well.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_reset_the_password_of_bjoerns_owasp_account_via_the_forgot_password_mechanism,<pre><code>-
+  question: 'Your eldest siblings middle name?'
+-
+  question: ""Mother's maiden name?""
+-
+  question: ""Mother's birth date? (MM/DD/YY)""
+-
+  question: ""Father's birth date? (MM/DD/YY)""
+-
+  question: ""Maternal grandmother's first name?""
+-
+  question: ""Paternal grandmother's first name?""
+-
+  question: 'Name of your favorite pet?'
+-
+  question: ""Last name of dentist when you were a teenager? (Do not include 'Dr.')""
+-
+  question: 'Your ZIP/postal code when you were a teenager?'
+-
+  question: 'Company you first work for as an adult?'
+-
+  question: 'Your favorite book?'
+-
+  question: 'Your favorite movie?'
+-
+  question: 'Number of one of your customer or ID cards?'
+-
+  question: ""What's your favorite place to go hiking?""</code></pre>",
+Blockchain Hype,"Learn about the Token Sale before its official announcement. (Difficulty Level: 5)",Security through Obscurity,1000,standard,visible,0,6f1a6427a4eb7cd7861eec9c75b4bd18ee5b9d9f,"Contraption,Code Analysis,Web3","The developers truly believe in ""Security through Obscurity"" over actual access restrictions.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-through-obscurity.html#_learn_about_the_token_sale_before_its_official_announcement,<pre><code>{
+    matcher: oauthMatcher٬
+    data: { params: (window.location.href).substr(window.location.href.indexOf('#')) }٬
+    component: OAuthComponent
+  }٬
+  {
+    matcher: tokenMatcher٬
+    component: TokenSaleComponent
+  }٬
+  {
+    path: '403'٬
+    component: ErrorPageComponent
+  }٬
+  {
+    path: '**'٬
+    component: SearchResultComponent
+  }
+]
+
+export const Routing = RouterModule.forRoot(routes٬ { useHash: true })
+
+export function oauthMatcher (url: UrlSegment[]): UrlMatchResult {
+  if (url.length === 0) {
+    return null as unknown as UrlMatchResult
+  }
+  const path = window.location.href
+  if (path.includes('#access_token=')) {
+    return ({ consumed: url })
+  }
+
+  return null as unknown as UrlMatchResult
+}
+
+export function tokenMatcher (url: UrlSegment[]): UrlMatchResult {
+  if (url.length === 0) {
+    return null as unknown as UrlMatchResult
+  }
+ 
+  const path = url[0].toString()
+  // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+  if (path.match((token1(25٬ 184٬ 174٬ 179٬ 182٬ 186) + (36669).toString(36).toLowerCase() + token2(13٬ 144٬ 87٬ 152٬ 139٬ 144٬ 83٬ 138) + (10).toString(36).toLowerCase()))) {
+    return ({ consumed: url })
+  }
+ 
+  return null as unknown as UrlMatchResult
+}
+
+export function token1 (...args: number[]) {
+  const L = Array.prototype.slice.call(args)
+  const D = L.shift()
+  return L.reverse().map(function (C٬ A) {
+    return String.fromCharCode(C - D - 45 - A)
+  }).join('')
+}
+
+export function token2 (...args: number[]) {
+  const T = Array.prototype.slice.call(arguments)
+  const M = T.shift()
+  return T.reverse().map(function (m٬ H) {
+    return String.fromCharCode(m - M - 24 - H)
+  }).join('')
+}</code></pre>",
+NFT Takeover,"Take over the wallet containing our official Soul Bound Token (NFT). (Difficulty Level: 2)",Sensitive Data Exposure,250,standard,visible,0,c481c6d12e5433274d02df151e125a857eb454ca,"Contraption,Good for Demos,Web3","Find the seed phrase posted accidentally.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_take_over_the_wallet_containing_our_official_soul_bound_token,<pre><code>pragma solidity ^0.8.4;
+
+import ""@openzeppelin/contracts/token/ERC721/ERC721.sol"";
+import ""@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/utils/Counters.sol"";
+
+contract JuiceShopSBT is ERC721٬ ERC721URIStorage٬ Ownable {
+    using Counters for Counters.Counter;
+
+    Counters.Counter private _tokenIdCounter;
+
+    constructor() ERC721(""JuiceShopSBT""٬ ""JS"") {}
+
+    function safeMint(address to٬ string memory uri) public onlyOwner {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to٬ tokenId);
+        _setTokenURI(tokenId٬ uri);
+    }
+
+    function _beforeTokenTransfer(
+    address from٬
+    address to٬
+    uint256 tokenId
+    ) internal override virtual {
+    require(from == address(0)٬ ""Err: token transfer is BLOCKED"");
+    super._beforeTokenTransfer(from٬ to٬ tokenId);
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721٬ ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721٬ ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+}</code></pre>",
+Mint the Honey Pot,"Mint the Honey Pot NFT by gathering BEEs from the bee haven. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,dd2ec4fd1d816a5ecc02f97df471db41c7e0aff3,"Web3,Internet Traffic","Discover NFT wonders among the captivating visual memories.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_mint_the_honey_pot_nft_by_gathering_bees_from_the_bee_haven,<pre><code>pragma solidity ^0.8.0;
+
+import ""@openzeppelin/contracts/token/ERC721/ERC721.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/utils/math/SafeMath.sol"";
+import ""@openzeppelin/contracts/token/ERC20/IERC20.sol"";
+
+contract HoneyPotNFT is ERC721٬ Ownable {
+    using SafeMath for uint256;
+
+    IERC20 public token = IERC20(0x36435796Ca9be2bf150CE0dECc2D8Fab5C4d6E13);
+    uint256 public constant mintPrice = 1000 * (10**18);
+    uint256 public totalSupply = 0;
+
+    string public constant fixedMetadataHash = ""QmRad1vxT3soFMNx9j3bBmkABb4C86anY1f5XeonosHy3m"";
+    event NFTMinted(address indexed owner٬ uint256 tokenId);
+
+    constructor() ERC721(""The Enchanted Honey Pot""٬ ""EHP"") {}
+
+    function mintNFT() external {
+        token.transferFrom(msg.sender٬ address(this)٬ mintPrice);
+        _safeMint(msg.sender٬ totalSupply);
+        totalSupply = totalSupply.add(1);
+        emit NFTMinted(msg.sender٬ totalSupply - 1);
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId)٬ ""Token does not exist."");
+        return fixedMetadataHash;
+    }
+}</code></pre>",
+Wallet Depletion,"Withdraw more ETH from the new wallet than you deposited. (Difficulty Level: 6)",Miscellaneous,1350,standard,visible,0,9417b406261ce961ff8df3565f0c762d92467ee7,"Web3,Internet Traffic","Try to exploit the contract of the wallet.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/miscellaneous.html#_withdraw_more_eth_from_the_new_wallet_than_you_deposited,<pre><code>pragma solidity ^0.6.12;
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v3.3/contracts/math/SafeMath.sol';
+
+contract ETHWalletBank {
+  using SafeMath for uint256;
+
+  mapping(address => uint) public balances;
+  mapping(address => uint) public userWithdrawing;
+
+  event ContractExploited(address indexed culprit);
+
+  function ethdeposit(address _to) public payable {
+    balances[_to] = balances[_to].add(msg.value);
+  }
+
+  function balanceOf(address _who) public view returns (uint balance) {
+    return balances[_who];
+  }
+
+  function withdraw(uint _amount) public {
+    require(_amount <= 0.1 ether٬ ""Withdrawal amount must be less than or equal to 0.1 ether"");
+    require(balances[msg.sender] >= _amount٬ ""Insufficient balance"");
+    if (userWithdrawing[msg.sender] <= 1) {
+      userWithdrawing[msg.sender] = userWithdrawing[msg.sender] + 1;
+    } else {
+      userWithdrawing[msg.sender] = 0;
+      return;
+    }
+    (bool result٬ ) = msg.sender.call{ value: _amount }("""");
+    require(result٬ ""Withdrawal call failed"");
+    balances[msg.sender] -= _amount;
+    userWithdrawing[msg.sender] = 0;
+  }
+
+  receive() external payable {}
+}</code></pre>",
+Web3 Sandbox,"Find an accidentally deployed code sandbox for writing smart contracts on the fly. (Difficulty Level: 1)",Broken Access Control,100,standard,visible,0,6e5badeeb63e5d3f6d2652db067187b5c0967cfa,"Web3","It is just as easy as finding the Score Board.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_find_an_accidentally_deployed_code_sandbox,<pre><code>const routes: Routes = [
+  {
+    path: 'administration'٬
+    component: AdministrationComponent٬
+    canActivate: [AdminGuard]
+  }٬
+  {
+    path: 'accounting'٬
+    component: AccountingComponent٬
+    canActivate: [AccountingGuard]
+  }٬
+  {
+    path: 'about'٬
+    component: AboutComponent
+  }٬
+  {
+    path: 'address/select'٬
+    component: AddressSelectComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/saved'٬
+    component: SavedAddressComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/create'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/edit/:addressId'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'delivery-method'٬
+    component: DeliveryMethodComponent
+  }٬
+  {
+    path: 'deluxe-membership'٬
+    component: DeluxeUserComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'saved-payment-methods'٬
+    component: SavedPaymentMethodsComponent
+  }٬
+  {
+    path: 'basket'٬
+    component: BasketComponent
+  }٬
+  {
+    path: 'order-completion/:id'٬
+    component: OrderCompletionComponent
+  }٬
+  {
+    path: 'contact'٬
+    component: ContactComponent
+  }٬
+  {
+    path: 'photo-wall'٬
+    component: PhotoWallComponent
+  }٬
+  {
+    path: 'complain'٬
+    component: ComplaintComponent
+  }٬
+  {
+    path: 'chatbot'٬
+    component: ChatbotComponent
+  }٬
+  {
+    path: 'order-summary'٬
+    component: OrderSummaryComponent
+  }٬
+  {
+    path: 'order-history'٬
+    component: OrderHistoryComponent
+  }٬
+  {
+    path: 'payment/:entity'٬
+    component: PaymentComponent
+  }٬
+  {
+    path: 'wallet'٬
+    component: WalletComponent
+  }٬
+  {
+    path: 'login'٬
+    component: LoginComponent
+  }٬
+  {
+    path: 'forgot-password'٬
+    component: ForgotPasswordComponent
+  }٬
+  {
+    path: 'recycle'٬
+    component: RecycleComponent
+  }٬
+  {
+    path: 'register'٬
+    component: RegisterComponent
+  }٬
+  {
+    path: 'search'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'hacking-instructor'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'score-board'٬
+    component: ScoreBoardComponent
+  }٬
+  {
+    path: 'track-result'٬
+    component: TrackResultComponent
+  }٬
+  {
+    path: 'track-result/new'٬
+    component: TrackResultComponent٬
+    data: {
+      type: 'new'
+    }
+  }٬
+  {
+    path: '2fa/enter'٬
+    component: TwoFactorAuthEnterComponent
+  }٬
+  {
+    path: 'privacy-security'٬
+    component: PrivacySecurityComponent٬
+    children: [
+      {
+        path: 'privacy-policy'٬
+        component: PrivacyPolicyComponent
+      }٬
+      {
+        path: 'change-password'٬
+        component: ChangePasswordComponent
+      }٬
+      {
+        path: 'two-factor-authentication'٬
+        component: TwoFactorAuthComponent
+      }٬
+      {
+        path: 'data-export'٬
+        component: DataExportComponent
+      }٬
+      {
+        path: 'last-login-ip'٬
+        component: LastLoginIpComponent
+      }
+    ]
+  }٬
+  {
+    path: 'juicy-nft'٬
+    component: NFTUnlockComponent
+  }٬
+  {
+    path: 'wallet-web3'٬
+    loadChildren: async () => await loadWeb3WalletModule()
+  }٬
+  {
+    path: 'web3-sandbox'٬
+    loadChildren: async () => await loadWeb3SandboxtModule()
+  }٬
+  {
+    path: 'bee-haven'٬
+    loadChildren: async () => await loadFaucetModule()
+  }٬
+   {
+    matcher: oauthMatcher٬
+    data: { params: (window.location.href).substr(window.location.href.indexOf('#')) }٬
+    component: OAuthComponent
+  }٬
+  {
+    matcher: tokenMatcher٬
+    component: TokenSaleComponent
+  }٬
+  {
+    path: '403'٬
+    component: ErrorPageComponent
+  }٬
+  {
+    path: '**'٬
+    component: SearchResultComponent
+  }
+]</code></pre>",
+Blocked RCE DoS,"Perform a Remote Code Execution that would keep a less hardened application busy <em>forever</em>. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 5)",Insecure Deserialization,1000,standard,visible,0,f794e88774087c775e300beda3c0b4cd797c269b,"Danger Zone","The feature you need to exploit for this challenge is not directly advertised anywhere.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/insecure-deserialization.html#_perform_a_remote_code_execution_that_would_keep_a_less_hardened_application_busy_forever",
+CAPTCHA Bypass,"Submit 10 or more customer feedbacks within 20 seconds. (Difficulty Level: 3)",Broken Anti Automation,450,standard,visible,0,0444f13ce4a5580cf6a6219ea19e2c89b7cd1d1f,"Brute Force","After finding a CAPTCHA bypass٬ write a script that automates feedback submission. Or open many browser tabs and be really quick.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-anti-automation.html#_submit_10_or_more_customer_feedbacks_within_20_seconds",
+Change Bender's Password,"Change Bender's password into <i>slurmCl4ssic</i> without using SQL Injection or Forgot Password. (Difficulty Level: 5)",Broken Authentication,1000,standard,visible,0,cec8dcc2d125c262c9434637ce7d4e834cf0a0d8,,"In previous releases this challenge was wrongly accused of being based on CSRF.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_change_benders_password_into_slurmcl4ssic_without_using_sql_injection_or_forgot_password",
+Christmas Special,"Order the Christmas special offer of 2014. (Difficulty Level: 4)",Injection,700,standard,visible,0,929646db81fdde9492b64f2d3c5fa0a3da182ad7,,"Find out how the application handles unavailable products and try to find a loophole.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_order_the_christmas_special_offer_of_2014",
+CSP Bypass,"Bypass the Content Security Policy and perform an XSS attack with <code>&lt;script&gt;alert(`xss`)&lt;/script&gt;</code> on a legacy page within the application. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 4)",XSS,700,standard,visible,0,64dec3daf0a02d4697c5fec917b8ad25862d4181,"Danger Zone","What is even ""better"" than a legacy page with a homegrown RegEx sanitizer? Having CSP injection issues on the exact same page as well!,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_bypass_the_content_security_policy_and_perform_an_xss_attack_on_a_legacy_page",
+Client-side XSS Protection,"Perform a <i>persisted</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code> bypassing a <i>client-side</i> security mechanism. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 3)",XSS,450,standard,visible,0,237fc9b7b8c04174abe71483de6eb53c04fe9e90,"Danger Zone","Only some input fields validate their input. Even less of these are persisted in a way where their content is shown on another screen.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_persisted_xss_attack_bypassing_a_client_side_security_mechanism",
+Confidential Document,"Access a confidential document. (Difficulty Level: 1)",Sensitive Data Exposure,100,standard,visible,0,8d2072c6b0a455608ca1a293dc0c9579883fc6a5,"Good for Demos","Analyze and tamper with links in the application that deliver a file directly.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_access_a_confidential_document,<pre><code>/* /ftp directory browsing and file download */
+  app.use('/ftp'٬ serveIndexMiddleware٬ serveIndex('ftp'٬ { icons: true }))
+  app.use('/ftp(?!/quarantine)/:file'٬ fileServer())
+  app.use('/ftp/quarantine/:file'٬ quarantineServer())
+
+  app.use('/.well-known'٬ serveIndexMiddleware٬ serveIndex('.well-known'٬ { icons: true٬ view: 'details' }))
+  app.use('/.well-known'٬ express.static('.well-known'))
+
+  /* /encryptionkeys directory browsing */
+  app.use('/encryptionkeys'٬ serveIndexMiddleware٬ serveIndex('encryptionkeys'٬ { icons: true٬ view: 'details' }))
+  app.use('/encryptionkeys/:file'٬ keyServer())
+
+  /* /logs directory browsing */
+  app.use('/support/logs'٬ serveIndexMiddleware٬ serveIndex('logs'٬ { icons: true٬ view: 'details' }))
+  app.use('/support/logs/:file'٬ logFileServer())
+
+  /* Swagger documentation for B2B v2 endpoints */
+  app.use('/api-docs'٬ swaggerUi.serve٬ swaggerUi.setup(swaggerDocument))
+
+  app.use(express.static(path.resolve('frontend/dist/frontend')))
+  app.use(cookieParser('kekse'))</code></pre>",
+DOM XSS,"Perform a <i>DOM</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code>. (Difficulty Level: 1)",XSS,100,standard,visible,0,4a31a4fe0954199566e360a873802bf64d0d0a84,"Tutorial,Good for Demos","Look for an input field where its content appears in the HTML when its form is submitted.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_dom_xss_attack,<pre><code>filterTable () {
+    let queryParam: string = this.route.snapshot.queryParams.q
+    if (queryParam) {
+      queryParam = queryParam.trim()
+      this.dataSource.filter = queryParam.toLowerCase()
+      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam)
+      this.gridDataSource.subscribe((result: any) => {
+        if (result.length === 0) {
+          this.emptyState = true
+        } else {
+          this.emptyState = false
+        }
+      })
+    } else {
+      this.dataSource.filter = ''
+      this.searchValue = undefined
+      this.emptyState = false
+    }
+  }</code></pre>",
+Database Schema,"Exfiltrate the entire DB schema definition via SQL Injection. (Difficulty Level: 3)",Injection,450,standard,visible,0,1131456a55e84fbe58f6db03c9895921c1db5b3e,,"Find out where this information could come from. Then craft a UNION SELECT attack string against an endpoint that offers an unnecessary way to filter data.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_exfiltrate_the_entire_db_schema_definition_via_sql_injection,<pre><code>module.exports = function searchProducts () {
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    let criteria: any = req.query.q === 'undefined' ? '' : req.query.q ?? ''
+    criteria = (criteria.length <= 200) ? criteria : criteria.substring(0٬ 200)
+    models.sequelize.query(`SELECT * FROM Products WHERE ((name LIKE '%${criteria}%' OR description LIKE '%${criteria}%') AND deletedAt IS NULL) ORDER BY name`)
+      .then(([products]: any) => {
+        const dataString = JSON.stringify(products)
+        for (let i = 0; i < products.length; i++) {
+          products[i].name = req.__(products[i].name)
+          products[i].description = req.__(products[i].description)
+        }
+        res.json(utils.queryResultToJson(products))
+      }).catch((error: ErrorWithParent) => {
+        next(error.parent)
+      })
+  }
+}</code></pre>",
+Deprecated Interface,"Use a deprecated B2B interface that was not properly shut down. (Difficulty Level: 2)",Security Misconfiguration,250,standard,visible,0,5fd213c8fc772846b262c307eaaa901340a195bb,"Contraption,Prerequisite","The developers who disabled the interface think they could go invisible by just closing their eyes.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-misconfiguration.html#_use_a_deprecated_b2b_interface_that_was_not_properly_shut_down",
+Easter Egg,"Find the hidden <a href=""https://en.wikipedia.org/wiki/Easter_egg_(media)"" target=""_blank"">easter egg</a>. (Difficulty Level: 4)",Broken Access Control,700,standard,visible,0,87af1696e5207d68cd40df414a1805fbdc233024,"Shenanigans,Contraption,Good for Demos","If you solved one of the three file access challenges٬ you already know where to find the easter egg.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_find_the_hidden_easter_egg",
+Email Leak,"Perform an unwanted information disclosure by accessing data cross-domain. (Difficulty Level: 5)",Sensitive Data Exposure,1000,standard,visible,0,dc09eb2b8517008ab65730f7355443a7f4bc8326,,"Try to find and attack an endpoint that responds with user information. SQL Injection is not the solution here.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_perform_an_unwanted_information_disclosure_by_accessing_data_cross_domain",
+Empty User Registration,"Register a user with an empty email and password. (Difficulty Level: 2)",Improper Input Validation,250,standard,visible,0,e58f8a9612c60985360e904b027535262c52f9dc,,"Consider intercepting and playing with the request payload.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_register_a_user_account_with_an_empty_email_and_password",
+Ephemeral Accountant,"Log in with the (non-existing) accountant <i>acc0unt4nt@juice-sh.op</i> without ever registering that user. (Difficulty Level: 4)",Injection,700,standard,visible,0,9b65e390a97a9a39d0d597ab89a77179b0a7cac4,,"Try to create the needed user ""out of thin air"".,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_log_in_with_the_non_existing_accountant_without_ever_registering_that_user",
+Error Handling,"Provoke an error that is neither very gracefully nor consistently handled. (Difficulty Level: 1)",Security Misconfiguration,100,standard,visible,0,9c297196ecf8890bc1e900fcf3aebae8c9f9880a,"Prerequisite","Try to submit bad input to forms. Alternatively tamper with URL paths or parameters.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-misconfiguration.html#_provoke_an_error_that_is_neither_very_gracefully_nor_consistently_handled",
+Expired Coupon,"Successfully redeem an expired campaign coupon code. (Difficulty Level: 4)",Improper Input Validation,700,standard,visible,0,12703f16a02e150ef92de329ce57539e53c6aac7,,"Try to identify past special event or holiday campaigns of the shop first.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_successfully_redeem_an_expired_campaign_coupon_code",
+Extra Language,"Retrieve the language file that never made it into production. (Difficulty Level: 5)",Broken Anti Automation,1000,standard,visible,0,9bb1be0fc245910b356fdac4e78e315d58d810af,"Brute Force","Brute force is not the only option for this challenge٬ but a perfectly viable one.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-anti-automation.html#_retrieve_the_language_file_that_never_made_it_into_production",
+Five-Star Feedback,"Get rid of all 5-star customer feedback. (Difficulty Level: 2)",Broken Access Control,250,standard,visible,0,78231b75c0b2180b7e964dcbb1ab3c3f58639f2e,,"Once you found admin section of the application٬ this challenge is almost trivial.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_get_rid_of_all_5_star_customer_feedback",
+Forged Coupon,"Forge a coupon code that gives you a discount of at least 80%. (Difficulty Level: 6)",Cryptographic Issues,1350,standard,visible,0,10e04eb4104bd61f5fafc77c844d4d70b3f33f08,"Good for Demos,Code Analysis","Try either a) a knowledgeable brute force attack or b) reverse engineering or c) some research in the cloud.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/cryptographic-issues.html#_forge_a_coupon_code_that_gives_you_a_discount_of_at_least_80",
+Forged Feedback,"Post some feedback in another user's name. (Difficulty Level: 3)",Broken Access Control,450,standard,visible,0,b3245d86c5b5a6e10a1319aebced515c1763b754,"Tutorial","You can solve this by tampering with the user interface or by intercepting the communication with the RESTful backend.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_post_some_feedback_in_another_users_name",
+Forged Review,"Post a product review as another user or edit any user's existing review. (Difficulty Level: 3)",Broken Access Control,450,standard,visible,0,2d542917ab9cd27314b53b9c85f956af461a550d,,"Observe the flow of product review posting and editing and see if you can exploit it.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_post_a_product_review_as_another_user_or_edit_any_users_existing_review,<pre><code>module.exports = function productReviews () {
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    const user = security.authenticatedUsers.from(req)
+    db.reviewsCollection.update(
+      { _id: req.body.id }٬
+      { $set: { message: req.body.message } }٬
+      { multi: true }
+    ).then(
+      (result: { modified: number٬ original: Array<{ author: any }> }) => {
+        res.json(result)
+      }٬ (err: unknown) => {
+        res.status(500).json(err)
+      })
+  }
+}</code></pre>",
+Forged Signed JWT,"Forge an almost properly RSA-signed JWT token that impersonates the (non-existing) user <i>rsa_lord@juice-sh.op</i>. (Difficulty Level: 6)",Vulnerable Components,1350,standard,visible,0,b333748beae429d9459da79ef6b1c4ba492f69e9,,"This challenge is explicitly not about acquiring the RSA private key used for JWT signing.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_forge_an_almost_properly_rsa_signed_jwt_token",
+Forgotten Developer Backup,"Access a developer's forgotten backup file. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,dad737329153068527159005db4eb139e86e76ba,"Contraption,Good for Demos,Prerequisite","You need to trick a security mechanism into thinking that the file you want has a valid file type.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_access_a_developers_forgotten_backup_file",
+Forgotten Sales Backup,"Access a salesman's forgotten backup file. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,9854fa972c745fa0e8a55f0687528b1f483856b1,"Contraption","You need to trick a security mechanism into thinking that the file you want has a valid file type.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_access_a_salesmans_forgotten_backup_file",
+Frontend Typosquatting,"<a href=""/#/contact"">Inform the shop</a> about a <i>typosquatting</i> imposter that dug itself deep into the frontend. (Mention the exact name of the culprit) (Difficulty Level: 5)",Vulnerable Components,1000,standard,visible,0,5d88f4080ce3baa81f32621d3a3440c8c718a302,,"This challenge has nothing to do with mistyping web domains. There is no conveniently misplaced file helping you with this one either. Or is there?,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_inform_the_shop_about_a_typosquatting_imposter_that_dug_itself_deep_into_the_frontend",
+GDPR Data Erasure,"Log in with Chris' erased user account. (Difficulty Level: 3)",Broken Authentication,450,standard,visible,0,22ed55ea33b596ba50c67235264769e28d5272b3,,"Turns out that something is technically and legally wrong with the implementation of the ""right to be forgotten"" for users.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_log_in_with_chris_erased_user_account",
+GDPR Data Theft,"Steal someone else's personal data without using Injection. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,4e606bcbc4a3ddb154a1e296cba3dca34889a5be,,"Trick the regular Data Export to give you more than actually belongs to you.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_steal_someone_elses_personal_data_without_using_injection",
+HTTP-Header XSS,"Perform a <i>persisted</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code> through an HTTP header. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 4)",XSS,700,standard,visible,0,c37da14686b69a220fd9febd09bb9593e7d0539f,"Danger Zone","Finding a piece of displayed information that could originate from an HTTP header is part of this challenge.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_persisted_xss_attack_through_an_http_header",
+Imaginary Challenge,"Solve challenge #999. Unfortunately, this challenge does not exist. (Difficulty Level: 6)",Cryptographic Issues,1350,standard,visible,0,3eb1eb054dc55a13772007ac980ca5bf310ee773,"Shenanigans,Code Analysis","You need to trick the hacking progress persistence feature into thinking you solved challenge #999.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/cryptographic-issues.html#_solve_challenge_999",
+Leaked Access Logs,"Dumpster dive the Internet for a leaked password and log in to the original user account it belongs to. (Creating a new account with the same password does not qualify as a solution.) (Difficulty Level: 5)",Sensitive Data Exposure,1000,standard,visible,0,0d81e34249c9ae82ba80693a26b4e2bdb1f764f0,"OSINT","Once you have it٬ a technique called ""Password Spraying"" might prove useful.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_dumpster_dive_the_internet_for_a_leaked_password_and_log_in_to_the_original_user_account_it_belongs_to",
+Leaked Unsafe Product,"Identify an unsafe product that was removed from the shop and <a href=""/#/contact"">inform the shop</a> which ingredients are dangerous. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,19ebb3402eb75df18d076bd6a15ed1521d36e306,"Shenanigans,OSINT","Your own SQLi and someone else's Ctrl-V will be your accomplices in this challenge!,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_identify_an_unsafe_product_that_was_removed_from_the_shop_and_inform_the_shop_which_ingredients_are_dangerous",
+Legacy Typosquatting,"<a href=""/#/contact"">Inform the shop</a> about a <i>typosquatting</i> trick it has been a victim of at least in <code>v6.2.0-SNAPSHOT</code>. (Mention the exact name of the culprit) (Difficulty Level: 4)",Vulnerable Components,700,standard,visible,0,b01a1ae56491c0c3d6b8d6e0264d099bda573758,,"This challenge has nothing to do with mistyping web domains. Investigate the forgotten developer's backup file instead.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_inform_the_shop_about_a_typosquatting_trick_it_has_been_a_victim_of",
+Login Admin,"Log in with the administrator's user account. (Difficulty Level: 2)",Injection,250,standard,visible,0,690fa3247a99d651e0b26f947baf0b79b4f404a9,"Tutorial,Good for Demos","Try different SQL Injection attack patterns depending whether you know the admin's email address or not.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_log_in_with_the_administrators_user_account,<pre><code>module.exports = function login () {
+  function afterLogin (user: { data: User٬ bid: number }٬ res: Response٬ next: NextFunction) {
+    BasketModel.findOrCreate({ where: { UserId: user.data.id } })
+      .then(([basket]: [BasketModel٬ boolean]) => {
+        const token = security.authorize(user)
+        user.bid = basket.id // keep track of original basket
+        security.authenticatedUsers.put(token٬ user)
+        res.json({ authentication: { token٬ bid: basket.id٬ umail: user.data.email } })
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }
+
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    models.sequelize.query(`SELECT * FROM Users WHERE email = '${req.body.email || ''}' AND password = '${security.hash(req.body.password || '')}' AND deletedAt IS NULL`٬ { model: UserModel٬ plain: true })
+      .then((authenticatedUser) => {
+        const user = utils.queryResultToJson(authenticatedUser)
+        if (user.data?.id && user.data.totpSecret !== '') {
+          res.status(401).json({
+            status: 'totp_token_required'٬
+            data: {
+              tmpToken: security.authorize({
+                userId: user.data.id٬
+                type: 'password_valid_needs_second_factor_token'
+              })
+            }
+          })
+        } else if (user.data?.id) {
+          afterLogin(user٬ res٬ next)
+        } else {
+          res.status(401).send(res.__('Invalid email or password.'))
+        }
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }</code></pre>",
+Login Amy,"Log in with Amy's original user credentials. (This could take 93.83 billion trillion trillion centuries to brute force, but luckily she did not read the ""One Important Final Note"") (Difficulty Level: 3)",Sensitive Data Exposure,450,standard,visible,0,5444962659bf8d72f6322530b18d6b9123fbaeec,"OSINT","This challenge will make you go after a needle in a haystack.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_log_in_with_amys_original_user_credentials",
+Login Bender,"Log in with Bender's user account. (Difficulty Level: 3)",Injection,450,standard,visible,0,5ff5052e879e6fef64124e64c82c84ebc809c6c4,"Tutorial","If you know Bender's email address٬ try SQL Injection. Bender's password hash might not help you very much.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_log_in_with_benders_user_account,<pre><code>module.exports = function login () {
+  function afterLogin (user: { data: User٬ bid: number }٬ res: Response٬ next: NextFunction) {
+    BasketModel.findOrCreate({ where: { UserId: user.data.id } })
+      .then(([basket]: [BasketModel٬ boolean]) => {
+        const token = security.authorize(user)
+        user.bid = basket.id // keep track of original basket
+        security.authenticatedUsers.put(token٬ user)
+        res.json({ authentication: { token٬ bid: basket.id٬ umail: user.data.email } })
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }
+
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    models.sequelize.query(`SELECT * FROM Users WHERE email = '${req.body.email || ''}' AND password = '${security.hash(req.body.password || '')}' AND deletedAt IS NULL`٬ { model: UserModel٬ plain: true })
+      .then((authenticatedUser) => {
+        const user = utils.queryResultToJson(authenticatedUser)
+        if (user.data?.id && user.data.totpSecret !== '') {
+          res.status(401).json({
+            status: 'totp_token_required'٬
+            data: {
+              tmpToken: security.authorize({
+                userId: user.data.id٬
+                type: 'password_valid_needs_second_factor_token'
+              })
+            }
+          })
+        } else if (user.data?.id) {
+          afterLogin(user٬ res٬ next)
+        } else {
+          res.status(401).send(res.__('Invalid email or password.'))
+        }
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }</code></pre>",
+Login Bjoern,"Log in with Bjoern's Gmail account <i>without</i> previously changing his password, applying SQL Injection, or hacking his Google account. (Difficulty Level: 4)",Broken Authentication,700,standard,visible,0,5fb1dbd45670d209e1c48ed59222c2bca732d354,"Code Analysis","The security flaw behind this challenge is 100% OWASP Juice Shop's fault and 0% Google's.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_log_in_with_bjoerns_gmail_account",
+Login Jim,"Log in with Jim's user account. (Difficulty Level: 3)",Injection,450,standard,visible,0,de0806c1e34a5783b4b1672fa4eed440a9912378,"Tutorial","Try cracking Jim's password hash if you harvested it already. Alternatively٬ if you know Jim's email address٬ try SQL Injection.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_log_in_with_jims_user_account,<pre><code>module.exports = function login () {
+  function afterLogin (user: { data: User٬ bid: number }٬ res: Response٬ next: NextFunction) {
+    BasketModel.findOrCreate({ where: { UserId: user.data.id } })
+      .then(([basket]: [BasketModel٬ boolean]) => {
+        const token = security.authorize(user)
+        user.bid = basket.id // keep track of original basket
+        security.authenticatedUsers.put(token٬ user)
+        res.json({ authentication: { token٬ bid: basket.id٬ umail: user.data.email } })
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }
+
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    models.sequelize.query(`SELECT * FROM Users WHERE email = '${req.body.email || ''}' AND password = '${security.hash(req.body.password || '')}' AND deletedAt IS NULL`٬ { model: UserModel٬ plain: true })
+      .then((authenticatedUser) => {
+        const user = utils.queryResultToJson(authenticatedUser)
+        if (user.data?.id && user.data.totpSecret !== '') {
+          res.status(401).json({
+            status: 'totp_token_required'٬
+            data: {
+              tmpToken: security.authorize({
+                userId: user.data.id٬
+                type: 'password_valid_needs_second_factor_token'
+              })
+            }
+          })
+        } else if (user.data?.id) {
+          afterLogin(user٬ res٬ next)
+        } else {
+          res.status(401).send(res.__('Invalid email or password.'))
+        }
+      }).catch((error: Error) => {
+        next(error)
+      })
+  }</code></pre>",
+Login MC SafeSearch,"Log in with MC SafeSearch's original user credentials without applying SQL Injection or any other bypass. (Difficulty Level: 2)",Sensitive Data Exposure,250,standard,visible,0,bb105418e73708ceccf1a7b2491f434b8f5230e4,"Shenanigans,OSINT","You should listen to MC's hit song ""Protect Ya Passwordz"".,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_log_in_with_mc_safesearchs_original_user_credentials",
+Login Support Team,"Log in with the support team's original user credentials without applying SQL Injection or any other bypass. (Difficulty Level: 6)",Security Misconfiguration,1350,standard,visible,0,86c8986dff834112ed790d7d53dadb46e9dca210,"Brute Force,Code Analysis","The underlying flaw of this challenge is a lot more human error than technical weakness.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-misconfiguration.html#_log_in_with_the_support_teams_original_user_credentials",
+Manipulate Basket,"Put an additional product into another user's shopping basket. (Difficulty Level: 3)",Broken Access Control,450,standard,visible,0,8f4e92556e5cafa24316d3fbb482384f66a0619d,,"Have an eye on the HTTP traffic while placing products in the shopping basket. Changing the quantity of products already in the basket doesn't count.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_put_an_additional_product_into_another_users_shopping_basket",
+Misplaced Signature File,"Access a misplaced <a href=""https://github.com/Neo23x0/sigma"">SIEM signature</a> file. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,b9263160f81d18dc69161db7ffb8a2d622bf1755,"Good Practice,Contraption","You need to trick a security mechanism into thinking that the file you want has a valid file type.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_access_a_misplaced_siem_signature_file",
+Multiple Likes,"Like any review at least three times as the same user. (Difficulty Level: 6)",Broken Anti Automation,1350,standard,visible,0,ec7840f71a70dac3908a7ab0f8c5b58eb986e892,,"Punctuality is the politeness of kings.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-anti-automation.html#_like_any_review_at_least_three_times_as_the_same_user",
+Nested Easter Egg,"Apply some advanced cryptanalysis to find <i>the real</i> easter egg. (Difficulty Level: 4)",Cryptographic Issues,700,standard,visible,0,9237a0d67e49ba39ab0d85d4caecb5808806f4bb,"Shenanigans,Good for Demos","You might have to peel through several layers of tough-as-nails encryption for this challenge.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/cryptographic-issues.html#_apply_some_advanced_cryptanalysis_to_find_the_real_easter_egg",
+NoSQL DoS,"Let the server sleep for some time. (It has done more than enough hard work for you) <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 4)",Injection,700,standard,visible,0,6322a4a6cad7b7ab96fa868a706aaa11932b918e,"Danger Zone","This challenge is essentially a stripped-down Denial of Service (DoS) attack.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_let_the_server_sleep_for_some_time",
+NoSQL Exfiltration,"All your orders are belong to us! Even the ones which don't. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 5)",Injection,1000,standard,visible,0,e606cff6a6a895ea073e4aeb71a42eebf63a25d1,"Danger Zone","Take a close look on how the $where query operator works in MongoDB.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_all_your_orders_are_belong_to_us",
+NoSQL Manipulation,"Update multiple product reviews at the same time. (Difficulty Level: 4)",Injection,700,standard,visible,0,8388280c9e656fe7aa45e8920e36c5bfcbfa3519,,"Take a close look on how the equivalent of UPDATE-statements in MongoDB work.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_update_multiple_product_reviews_at_the_same_time,<pre><code>module.exports = function productReviews () {
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    const user = security.authenticatedUsers.from(req)
+    db.reviewsCollection.update(
+      { _id: req.body.id }٬
+      { $set: { message: req.body.message } }٬
+      { multi: true }
+    ).then(
+      (result: { modified: number٬ original: Array<{ author: any }> }) => {
+        res.json(result)
+      }٬ (err: unknown) => {
+        res.status(500).json(err)
+      })
+  }
+}</code></pre>",
+Outdated Allowlist,"Let us redirect you to one of our crypto currency addresses which are not promoted any longer. (Difficulty Level: 1)",Unvalidated Redirects,100,standard,visible,0,1ad816c82e078df250e618cba7893093115f4521,"Code Analysis","We might have failed to take this out of our code properly.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/unvalidated-redirects.html#_let_us_redirect_you_to_one_of_our_crypto_currency_addresses,<pre><code>export const redirectAllowlist = new Set([
+  'https://github.com/juice-shop/juice-shop'٬
+  'https://blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm'٬
+  'https://explorer.dash.org/address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW'٬
+  'https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6'٬
+  'http://shop.spreadshirt.com/juiceshop'٬
+  'http://shop.spreadshirt.de/juiceshop'٬
+  'https://www.stickeryou.com/products/owasp-juice-shop/794'٬
+  'http://leanpub.com/juice-shop'
+])
+
+export const isRedirectAllowed = (url: string) => {
+  let allowed = false
+  for (const allowedUrl of redirectAllowlist) {
+    allowed = allowed || url.includes(allowedUrl)
+  }
+  return allowed
+}</code></pre>",
+Password Strength,"Log in with the administrator's user credentials without previously changing them or applying SQL Injection. (Difficulty Level: 2)",Broken Authentication,250,standard,visible,0,ff4aebffe31b0ffdea9bdd0207a16a3c01ac6c56,"Brute Force,Tutorial","This one should be equally easy to a) brute force٬ b) crack the password hash or c) simply guess.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_log_in_with_the_administrators_user_credentials_without_previously_changing_them_or_applying_sql_injection,<pre><code>User.init(
+      password: {
+        type: DataTypes.STRING٬
+        set (clearTextPassword: string) {
+          this.setDataValue('password'٬ security.hash(clearTextPassword))
+        }
+      }٬</code></pre>",
+Payback Time,"Place an order that makes you rich. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,bccfc69b31482f1eaa399e6ded3cce938b9fc219,,"You literally need to make the shop owe you any amount of money.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_place_an_order_that_makes_you_rich",
+Premium Paywall,"<i class=""far fa-gem""></i><i class=""far fa-gem""></i><i class=""far fa-gem""></i><i class=""far fa-gem""></i><i class=""far fa-gem""></i><!--IvLuRfBJYlmStf9XfL6ckJFngyd9LfV1JaaN/KRTPQPidTuJ7FR+D/nkWJUF+0xUF07CeCeqYfxq+OJVVa0gNbqgYkUNvn//UbE7e95C+6e+7GtdpqJ8mqm4WcPvUGIUxmGLTTAC2+G9UuFCD1DUjg==--> <a href=""https://blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm"" target=""_blank""><i class=""fab fa-btc fa-sm""></i> Unlock Premium Challenge</a> to access exclusive content. (Difficulty Level: 6)",Cryptographic Issues,1350,standard,visible,0,41db0b8dbceb01d9737fceb888a1f24ddd8f1dff,"Shenanigans","You do not have to pay anything to unlock this challenge! Nonetheless٬ donations are very much appreciated.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/cryptographic-issues.html#_unlock_premium_challenge_to_access_exclusive_content",
+Privacy Policy,"Read our privacy policy. (Difficulty Level: 1)",Miscellaneous,100,standard,visible,0,13083493dec15380f7319596e5e2bc67437ce5c4,"Good Practice,Tutorial,Good for Demos","We won't even ask you to confirm that you did. Just read it. Please. Pretty please.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/miscellaneous.html#_read_our_privacy_policy",
+Privacy Policy Inspection,"Prove that you actually read our privacy policy. (Difficulty Level: 3)",Security through Obscurity,450,standard,visible,0,2c4ad2aa82f89b4aefcb6d305d329005b5ebbe61,"Shenanigans,Good for Demos","Only by visiting a special URL you can confirm that you read it carefully.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-through-obscurity.html#_prove_that_you_actually_read_our_privacy_policy",
+Product Tampering,"Change the <code>href</code> of the link within the <a href=""/#/search?q=OWASP SSL Advanced Forensic Tool (O-Saft)"">OWASP SSL Advanced Forensic Tool (O-Saft)</a> product description into <i>https://owasp.slack.com</i>. (Difficulty Level: 3)",Broken Access Control,450,standard,visible,0,7513f97578391e85282583fd084bc3a649f1d25f,,"Look for one of the following: a) broken admin functionality٬ b) holes in RESTful API or c) possibility for SQL Injection.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_change_the_href_of_the_link_within_the_o_saft_product_description,<pre><code>/** Authorization **/
+  /* Baskets: Unauthorized users are not allowed to access baskets */
+  app.use('/rest/basket'٬ security.isAuthorized()٬ security.appendUserId())
+  /* BasketItems: API only accessible for authenticated users */
+  app.use('/api/BasketItems'٬ security.isAuthorized())
+  app.use('/api/BasketItems/:id'٬ security.isAuthorized())
+  /* Feedbacks: GET allowed for feedback carousel٬ POST allowed in order to provide feedback without being logged in */
+  app.use('/api/Feedbacks/:id'٬ security.isAuthorized())
+  /* Users: Only POST is allowed in order to register a new user */
+  app.get('/api/Users'٬ security.isAuthorized())
+  app.route('/api/Users/:id')
+    .get(security.isAuthorized())
+    .put(security.denyAll())
+    .delete(security.denyAll())
+  /* Products: Only GET is allowed in order to view products */
+  app.post('/api/Products'٬ security.isAuthorized())
+  // app.put('/api/Products/:id'٬ security.isAuthorized())
+  app.delete('/api/Products/:id'٬ security.denyAll())
+  /* Challenges: GET list of challenges allowed. Everything else forbidden entirely */
+  app.post('/api/Challenges'٬ security.denyAll())
+  app.use('/api/Challenges/:id'٬ security.denyAll())
+  /* Complaints: POST and GET allowed when logged in only */
+  app.get('/api/Complaints'٬ security.isAuthorized())
+  app.post('/api/Complaints'٬ security.isAuthorized())
+  app.use('/api/Complaints/:id'٬ security.denyAll())
+  /* Recycles: POST and GET allowed when logged in only */
+  app.get('/api/Recycles'٬ recycles.blockRecycleItems())
+  app.post('/api/Recycles'٬ security.isAuthorized())
+  /* Challenge evaluation before finale takes over */
+  app.get('/api/Recycles/:id'٬ recycles.getRecycleItem())
+  app.put('/api/Recycles/:id'٬ security.denyAll())
+  app.delete('/api/Recycles/:id'٬ security.denyAll())
+  /* SecurityQuestions: Only GET list of questions allowed. */
+  app.post('/api/SecurityQuestions'٬ security.denyAll())
+  app.use('/api/SecurityQuestions/:id'٬ security.denyAll())
+  /* SecurityAnswers: Only POST of answer allowed. */
+  app.get('/api/SecurityAnswers'٬ security.denyAll())
+  app.use('/api/SecurityAnswers/:id'٬ security.denyAll())
+  /* REST API */
+  app.use('/rest/user/authentication-details'٬ security.isAuthorized())
+  app.use('/rest/basket/:id'٬ security.isAuthorized())
+  app.use('/rest/basket/:id/order'٬ security.isAuthorized())
+  app.post('/api/Users'٬ verify.emptyUserRegistration())
+  /* Unauthorized users are not allowed to access B2B API */
+  app.use('/b2b/v2'٬ security.isAuthorized())
+  /* Check if the quantity is available in stock and limit per user not exceeded٬ then add item to basket */
+  app.put('/api/BasketItems/:id'٬ security.appendUserId()٬ basketItems.quantityCheckBeforeBasketItemUpdate())
+  app.post('/api/BasketItems'٬ security.appendUserId()٬ basketItems.quantityCheckBeforeBasketItemAddition()٬ basketItems.addBasketItem())
+  /* Accounting users are allowed to check and update quantities */
+  app.delete('/api/Quantitys/:id'٬ security.denyAll())
+  app.post('/api/Quantitys'٬ security.denyAll())
+  app.use('/api/Quantitys/:id'٬ security.isAccounting()٬ ipfilter(['123.456.789']٬ { mode: 'allow' }))
+  /* Feedbacks: Do not allow changes of existing feedback */
+  app.put('/api/Feedbacks/:id'٬ security.denyAll())
+  /* PrivacyRequests: Only allowed for authenticated users */
+  app.use('/api/PrivacyRequests'٬ security.isAuthorized())
+  app.use('/api/PrivacyRequests/:id'٬ security.isAuthorized())
+  /* PaymentMethodRequests: Only allowed for authenticated users */
+  app.post('/api/Cards'٬ security.appendUserId())
+  app.get('/api/Cards'٬ security.appendUserId()٬ payment.getPaymentMethods())
+  app.put('/api/Cards/:id'٬ security.denyAll())
+  app.delete('/api/Cards/:id'٬ security.appendUserId()٬ payment.delPaymentMethodById())
+  app.get('/api/Cards/:id'٬ security.appendUserId()٬ payment.getPaymentMethodById())
+  /* PrivacyRequests: Only POST allowed for authenticated users */
+  app.post('/api/PrivacyRequests'٬ security.isAuthorized())
+  app.get('/api/PrivacyRequests'٬ security.denyAll())
+  app.use('/api/PrivacyRequests/:id'٬ security.denyAll())
+
+  app.post('/api/Addresss'٬ security.appendUserId())
+  app.get('/api/Addresss'٬ security.appendUserId()٬ address.getAddress())
+  app.put('/api/Addresss/:id'٬ security.appendUserId())
+  app.delete('/api/Addresss/:id'٬ security.appendUserId()٬ address.delAddressById())
+  app.get('/api/Addresss/:id'٬ security.appendUserId()٬ address.getAddressById())
+  app.get('/api/Deliverys'٬ delivery.getDeliveryMethods())
+  app.get('/api/Deliverys/:id'٬ delivery.getDeliveryMethod())</code></pre>",
+Reflected XSS,"Perform a <i>reflected</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code>. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 2)",XSS,250,standard,visible,0,305021787d3e9cd9cebc057a021c2504550bb3b6,"Tutorial,Danger Zone,Good for Demos","Look for a url parameter where its value appears in the page it is leading to.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_reflected_xss_attack",
+Repetitive Registration,"Follow the DRY principle while registering a user. (Difficulty Level: 1)",Improper Input Validation,100,standard,visible,0,38327ed39639fb9ced76c9800f991bd8206ee144,,"You can solve this by cleverly interacting with the UI or bypassing it altogether.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_follow_the_dry_principle_while_registering_a_user",
+Reset Bender's Password,"Reset Bender's password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>the original answer</i> to his security question. (Difficulty Level: 4)",Broken Authentication,700,standard,visible,0,a3ed0a02985a524747be405af69600b167ecae9a,"OSINT","Not as trivial as Jim's but still not too difficult with some ""Futurama"" background knowledge.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_reset_benders_password_via_the_forgot_password_mechanism,<pre><code>-
+  question: 'Your eldest siblings middle name?'
+-
+  question: ""Mother's maiden name?""
+-
+  question: ""Mother's birth date? (MM/DD/YY)""
+-
+  question: ""Father's birth date? (MM/DD/YY)""
+-
+  question: ""Maternal grandmother's first name?""
+-
+  question: ""Paternal grandmother's first name?""
+-
+  question: 'Name of your favorite pet?'
+-
+  question: ""Last name of dentist when you were a teenager? (Do not include 'Dr.')""
+-
+  question: 'Your ZIP/postal code when you were a teenager?'
+-
+  question: 'Company you first work for as an adult?'
+-
+  question: 'Your favorite book?'
+-
+  question: 'Your favorite movie?'
+-
+  question: 'Number of one of your customer or ID cards?'
+-
+  question: ""What's your favorite place to go hiking?""</code></pre>",
+Reset Bjoern's Password,"Reset the password of Bjoern's internal account via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>the original answer</i> to his security question. (Difficulty Level: 5)",Broken Authentication,1000,standard,visible,0,dbaa733d61cf894a36235f884227b3a0b6150233,"OSINT","Nothing a little bit of Facebook stalking couldn't reveal. Might involve a historical twist.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_reset_the_password_of_bjoerns_internal_account_via_the_forgot_password_mechanism,<pre><code>-
+  question: 'Your eldest siblings middle name?'
+-
+  question: ""Mother's maiden name?""
+-
+  question: ""Mother's birth date? (MM/DD/YY)""
+-
+  question: ""Father's birth date? (MM/DD/YY)""
+-
+  question: ""Maternal grandmother's first name?""
+-
+  question: ""Paternal grandmother's first name?""
+-
+  question: 'Name of your favorite pet?'
+-
+  question: ""Last name of dentist when you were a teenager? (Do not include 'Dr.')""
+-
+  question: 'Your ZIP/postal code when you were a teenager?'
+-
+  question: 'Company you first work for as an adult?'
+-
+  question: 'Your favorite book?'
+-
+  question: 'Your favorite movie?'
+-
+  question: 'Number of one of your customer or ID cards?'
+-
+  question: ""What's your favorite place to go hiking?""</code></pre>",
+Reset Jim's Password,"Reset Jim's password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>the original answer</i> to his security question. (Difficulty Level: 3)",Broken Authentication,450,standard,visible,0,3c3e2d6ef99b733b947e92f8e2a9ed08bf57ea63,"OSINT","It's hard for celebrities to pick a security question from a hard-coded list where the answer is not publicly exposed.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_reset_jims_password_via_the_forgot_password_mechanism,<pre><code>-
+  question: 'Your eldest siblings middle name?'
+-
+  question: ""Mother's maiden name?""
+-
+  question: ""Mother's birth date? (MM/DD/YY)""
+-
+  question: ""Father's birth date? (MM/DD/YY)""
+-
+  question: ""Maternal grandmother's first name?""
+-
+  question: ""Paternal grandmother's first name?""
+-
+  question: 'Name of your favorite pet?'
+-
+  question: ""Last name of dentist when you were a teenager? (Do not include 'Dr.')""
+-
+  question: 'Your ZIP/postal code when you were a teenager?'
+-
+  question: 'Company you first work for as an adult?'
+-
+  question: 'Your favorite book?'
+-
+  question: 'Your favorite movie?'
+-
+  question: 'Number of one of your customer or ID cards?'
+-
+  question: ""What's your favorite place to go hiking?""</code></pre>",
+Reset Morty's Password,"Reset Morty's password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>his obfuscated answer</i> to his security question. (Difficulty Level: 5)",Broken Anti Automation,1000,standard,visible,0,c25ad846aad83cff51ef49167f6f54b467e731de,"OSINT,Brute Force","Find a way to bypass the rate limiting and brute force the obfuscated answer to Morty's security question.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-anti-automation.html#_reset_mortys_password_via_the_forgot_password_mechanism,<pre><code>/* Rate limiting */
+  app.enable('trust proxy')
+  app.use('/rest/user/reset-password'٬ new RateLimit({
+    windowMs: 5 * 60 * 1000٬
+    max: 100٬
+    keyGenerator ({ headers٬ ip }: { headers: any٬ ip: any }) { return headers['X-Forwarded-For'] ?? ip }
+  }))</code></pre>",
+Retrieve Blueprint,"Deprive the shop of earnings by downloading the blueprint for one of its products. (Difficulty Level: 5)",Sensitive Data Exposure,1000,standard,visible,0,5ec16347194b662a773887b63845315e8a3c7237,,"The product you might want to give a closer look is the OWASP Juice Shop Logo (3D-printed).,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_deprive_the_shop_of_earnings_by_downloading_the_blueprint_for_one_of_its_products",
+SSRF,"Request a hidden resource on server through server. (Difficulty Level: 6)",Broken Access Control,1350,standard,visible,0,cd689fc32a8e1288a9b762aebacd9756f8c78ab5,"Code Analysis","Reverse engineering something bad can make good things happen.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_request_a_hidden_resource_on_server_through_server",
+SSTi,"Infect the server with juicy malware by abusing arbitrary command execution. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 6)",Injection,1350,standard,visible,0,4a08ddbd93e970fd7cdca4f2fc940f6fc35dc7d8,"Contraption,Danger Zone,Code Analysis","""SSTi"" is a clear indicator that this has nothing to do with anything Angular. Also٬ make sure to use only our non-malicious malware.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_infect_the_server_with_juicy_malware_by_abusing_arbitrary_command_execution",
+Score Board,"Find the carefully hidden 'Score Board' page. (Difficulty Level: 1)",Miscellaneous,100,standard,visible,0,2614339936e8282e2f820f023d4d998a1f95e02a,"Tutorial,Code Analysis","Try to find a reference or clue behind the scenes. Or simply guess what URL the Score Board might have.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/score-board.html#_find_the_carefully_hidden_score_board_page,<pre><code>const routes: Routes = [
+  {
+    path: 'administration'٬
+    component: AdministrationComponent٬
+    canActivate: [AdminGuard]
+  }٬
+  {
+    path: 'accounting'٬
+    component: AccountingComponent٬
+    canActivate: [AccountingGuard]
+  }٬
+  {
+    path: 'about'٬
+    component: AboutComponent
+  }٬
+  {
+    path: 'address/select'٬
+    component: AddressSelectComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/saved'٬
+    component: SavedAddressComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/create'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'address/edit/:addressId'٬
+    component: AddressCreateComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'delivery-method'٬
+    component: DeliveryMethodComponent
+  }٬
+  {
+    path: 'deluxe-membership'٬
+    component: DeluxeUserComponent٬
+    canActivate: [LoginGuard]
+  }٬
+  {
+    path: 'saved-payment-methods'٬
+    component: SavedPaymentMethodsComponent
+  }٬
+  {
+    path: 'basket'٬
+    component: BasketComponent
+  }٬
+  {
+    path: 'order-completion/:id'٬
+    component: OrderCompletionComponent
+  }٬
+  {
+    path: 'contact'٬
+    component: ContactComponent
+  }٬
+  {
+    path: 'photo-wall'٬
+    component: PhotoWallComponent
+  }٬
+  {
+    path: 'complain'٬
+    component: ComplaintComponent
+  }٬
+  {
+    path: 'chatbot'٬
+    component: ChatbotComponent
+  }٬
+  {
+    path: 'order-summary'٬
+    component: OrderSummaryComponent
+  }٬
+  {
+    path: 'order-history'٬
+    component: OrderHistoryComponent
+  }٬
+  {
+    path: 'payment/:entity'٬
+    component: PaymentComponent
+  }٬
+  {
+    path: 'wallet'٬
+    component: WalletComponent
+  }٬
+  {
+    path: 'login'٬
+    component: LoginComponent
+  }٬
+  {
+    path: 'forgot-password'٬
+    component: ForgotPasswordComponent
+  }٬
+  {
+    path: 'recycle'٬
+    component: RecycleComponent
+  }٬
+  {
+    path: 'register'٬
+    component: RegisterComponent
+  }٬
+  {
+    path: 'search'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'hacking-instructor'٬
+    component: SearchResultComponent
+  }٬
+  {
+    path: 'score-board'٬
+    component: ScoreBoardComponent
+  }٬
+  {
+    path: 'track-result'٬
+    component: TrackResultComponent
+  }٬
+  {
+    path: 'track-result/new'٬
+    component: TrackResultComponent٬
+    data: {
+      type: 'new'
+    }
+  }٬
+  {
+    path: '2fa/enter'٬
+    component: TwoFactorAuthEnterComponent
+  }٬
+  {
+    path: 'privacy-security'٬
+    component: PrivacySecurityComponent٬
+    children: [
+      {
+        path: 'privacy-policy'٬
+        component: PrivacyPolicyComponent
+      }٬
+      {
+        path: 'change-password'٬
+        component: ChangePasswordComponent
+      }٬
+      {
+        path: 'two-factor-authentication'٬
+        component: TwoFactorAuthComponent
+      }٬
+      {
+        path: 'data-export'٬
+        component: DataExportComponent
+      }٬
+      {
+        path: 'last-login-ip'٬
+        component: LastLoginIpComponent
+      }
+    ]
+  }٬
+  {
+    path: 'juicy-nft'٬
+    component: NFTUnlockComponent
+  }٬
+  {
+    path: 'wallet-web3'٬
+    loadChildren: async () => await loadWeb3WalletModule()
+  }٬
+  {
+    path: 'web3-sandbox'٬
+    loadChildren: async () => await loadWeb3SandboxtModule()
+  }٬
+  {
+    path: 'bee-haven'٬
+    loadChildren: async () => await loadFaucetModule()
+  }٬
+   {
+    matcher: oauthMatcher٬
+    data: { params: (window.location.href).substr(window.location.href.indexOf('#')) }٬
+    component: OAuthComponent
+  }٬
+  {
+    matcher: tokenMatcher٬
+    component: TokenSaleComponent
+  }٬
+  {
+    path: '403'٬
+    component: ErrorPageComponent
+  }٬
+  {
+    path: '**'٬
+    component: SearchResultComponent
+  }
+]</code></pre>",
+Security Policy,"Behave like any ""white-hat"" should before getting into the action. (Difficulty Level: 2)",Miscellaneous,250,standard,visible,0,980d88a684fbf348f5812fc06fbfab2d8f66c76d,"Good Practice","Undoubtedly you want to read our security policy before conducting any research on our application.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/miscellaneous.html#_behave_like_any_white_hat_should_before_getting_into_the_action",
+Server-side XSS Protection,"Perform a <i>persisted</i> XSS attack with <code>&lt;iframe src=""javascript:alert(`xss`)""&gt;</code> bypassing a <i>server-side</i> security mechanism. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 4)",XSS,700,standard,visible,0,55520e3cd59f94c0177371d67a70fd4c023c57ea,"Danger Zone","The ""Comment"" field in the ""Customer Feedback"" screen is where you want to put your focus on.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_perform_a_persisted_xss_attack_bypassing_a_server_side_security_mechanism",
+Steganography,"<a href=""/#/contact"">Rat out</a> a notorious character hiding in plain sight in the shop. (Mention the exact name of the character) (Difficulty Level: 4)",Security through Obscurity,700,standard,visible,0,8df0878bad13852abf627d0ccf345522c6edcc21,"Shenanigans","No matter how good your eyes are٬ you will need tool assistance for this challenge.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-through-obscurity.html#_rat_out_a_notorious_character_hiding_in_plain_sight_in_the_shop",
+Successful RCE DoS,"Perform a Remote Code Execution that occupies the server for a while without using infinite loops. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 6)",Insecure Deserialization,1350,standard,visible,0,e3dd33892286cd40320283238d5c6babe93187d2,"Danger Zone","Your attack payload must not trigger the protection against too many iterations.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/insecure-deserialization.html#_perform_a_remote_code_execution_that_occupies_the_server_for_a_while_without_using_infinite_loops",
+Supply Chain Attack,"<a href=""/#/contact"">Inform the development team</a> about a danger to some of <em>their</em> credentials. (Send them the URL of the <em>original report</em> or an assigned CVE or another identifier of this vulnerability) (Difficulty Level: 5)",Vulnerable Components,1000,standard,visible,0,05a4bcdca9809df4506551b5b1f229fd55157572,"OSINT","This vulnerability will not affect any customer of the shop. It is aimed exclusively at its developers.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_inform_the_development_team_about_a_danger_to_some_of_their_credentials",
+Two Factor Authentication,"Solve the 2FA challenge for user ""wurstbrot"". (Disabling, bypassing or overwriting his 2FA settings does not count as a solution) (Difficulty Level: 5)",Broken Authentication,1000,standard,visible,0,04d6e957416281fe13669a7fe685fc27cb6c53c4,,"The 2FA implementation requires to store a secret for every user. You will need to find a way to access this secret in order to solve this challenge.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-authentication.html#_solve_the_2fa_challenge_for_user_wurstbrot",
+Unsigned JWT,"Forge an essentially unsigned JWT token that impersonates the (non-existing) user <i>jwtn3d@juice-sh.op</i>. (Difficulty Level: 5)",Vulnerable Components,1000,standard,visible,0,8614152eaa8ea996bd1359f4144ad3e8cc762198,,"This challenge exploits a weird option that is supported when signing tokens with JWT.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_forge_an_essentially_unsigned_jwt_token",
+Upload Size,"Upload a file larger than 100 kB. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,e3b59553d1be5291f45a76abe8291e3b666272d7,,"You can attach a small file to the ""Complaint"" form. Investigate how this upload actually works.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_upload_a_file_larger_than_100_kb",
+Upload Type,"Upload a file that has no .pdf or .zip extension. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,3ca7d41d1c903c5ae68c2f713c9f875db870aca0,,"You can attach a PDF or ZIP file to the ""Complaint"" form. Investigate how this upload actually works.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_upload_a_file_that_has_no_pdf_or_zip_extension",
+User Credentials,"Retrieve a list of all user credentials via SQL Injection. (Difficulty Level: 4)",Injection,700,standard,visible,0,b2bbb412cd027095df70fa3ca8d61ad0e101406e,,"Gather information on where user data is stored and how it is addressed. Then craft a corresponding UNION SELECT attack.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/injection.html#_retrieve_a_list_of_all_user_credentials_via_sql_injection,<pre><code>module.exports = function searchProducts () {
+  return (req: Request٬ res: Response٬ next: NextFunction) => {
+    let criteria: any = req.query.q === 'undefined' ? '' : req.query.q ?? ''
+    criteria = (criteria.length <= 200) ? criteria : criteria.substring(0٬ 200)
+    models.sequelize.query(`SELECT * FROM Products WHERE ((name LIKE '%${criteria}%' OR description LIKE '%${criteria}%') AND deletedAt IS NULL) ORDER BY name`)
+      .then(([products]: any) => {
+        const dataString = JSON.stringify(products)
+        for (let i = 0; i < products.length; i++) {
+          products[i].name = req.__(products[i].name)
+          products[i].description = req.__(products[i].description)
+        }
+        res.json(utils.queryResultToJson(products))
+      }).catch((error: ErrorWithParent) => {
+        next(error.parent)
+      })
+  }
+}</code></pre>",
+Video XSS,"Embed an XSS payload <code>&lt;/script&gt;&lt;script&gt;alert(`xss`)&lt;/script&gt;</code> into our promo video. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 6)",XSS,1350,standard,visible,0,5dec3d5cc33e7137736c615bc10a0c52359e86a8,"Danger Zone","You have to reuse the vulnerability behind one other 6-star challenge to be able to solve this one.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_embed_an_xss_payload_into_our_promo_video",
+View Basket,"View another user's shopping basket. (Difficulty Level: 2)",Broken Access Control,250,standard,visible,0,e6982b34b6734ceadd28e5019b251f929a80b815,"Tutorial,Good for Demos","Have an eye on the HTTP traffic while shopping. Alternatively try to find a client-side association of users to their basket.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_view_another_users_shopping_basket",
+Vulnerable Library,"<a href=""/#/contact"">Inform the shop</a> about a vulnerable library it is using. (Mention the exact library name and version in your comment) (Difficulty Level: 4)",Vulnerable Components,700,standard,visible,0,d6c3b1f0724fd3dbf4272c127a790c39a200876b,"OSINT","Report one of two possible answers via the ""Customer Feedback"" form. Do not forget to submit the library's version as well.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_inform_the_shop_about_a_vulnerable_library_it_is_using",
+Weird Crypto,"<a href=""/#/contact"">Inform the shop</a> about an algorithm or library it should definitely not use the way it does. (Difficulty Level: 2)",Cryptographic Issues,250,standard,visible,0,84054d82b9a99da2db6392744dad1e7e28bd2cca,,"Report one of four possible answers via the ""Customer Feedback"" form.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/cryptographic-issues.html#_inform_the_shop_about_an_algorithm_or_library_it_should_definitely_not_use_the_way_it_does",
+Allowlist Bypass,"Enforce a redirect to a page you are not supposed to redirect to. (Difficulty Level: 4)",Unvalidated Redirects,700,standard,visible,0,ed389b769ec2380372f247f8b669097bb55f3b7f,"Prerequisite","You have to find a way to beat the allowlist of allowed redirect URLs.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/unvalidated-redirects.html#_enforce_a_redirect_to_a_page_you_are_not_supposed_to_redirect_to,<pre><code>export const redirectAllowlist = new Set([
+  'https://github.com/juice-shop/juice-shop'٬
+  'https://blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm'٬
+  'https://explorer.dash.org/address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW'٬
+  'https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6'٬
+  'http://shop.spreadshirt.com/juiceshop'٬
+  'http://shop.spreadshirt.de/juiceshop'٬
+  'https://www.stickeryou.com/products/owasp-juice-shop/794'٬
+  'http://leanpub.com/juice-shop'
+])
+
+export const isRedirectAllowed = (url: string) => {
+  let allowed = false
+  for (const allowedUrl of redirectAllowlist) {
+    allowed = allowed || url.includes(allowedUrl)
+  }
+  return allowed
+}</code></pre>",
+XXE Data Access,"Retrieve the content of <code>C:\Windows\system.ini</code> or <code>/etc/passwd</code> from the server. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 3)",XXE,450,standard,visible,0,5a196f6f8335ad860de5fd4597a69de8f23dbce8,"Danger Zone","The leverage point for this challenge is the deprecated B2B interface.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xxe.html#_retrieve_the_content_of_cwindowssystemini_or_etcpasswd_from_the_server",
+XXE DoS,"Give the server something to chew on for quite a while. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 5)",XXE,1000,standard,visible,0,f884fb0fd5282d5a33cf44fd65e20ddad1d2b795,"Danger Zone","It is not as easy as sending a large amount of data directly to the deprecated B2B interface.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xxe.html#_give_the_server_something_to_chew_on_for_quite_a_while",
+Zero Stars,"Give a devastating zero-star feedback to the store. (Difficulty Level: 1)",Improper Input Validation,100,standard,visible,0,e958569c4a12e3b97f38bd05cac3f0e5a1b17142,,"Before you invest time bypassing the API٬ you might want to play around with the UI a bit.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_give_a_devastating_zero_star_feedback_to_the_store",
+Missing Encoding,"Retrieve the photo of Bjoern's cat in ""melee combat-mode"". (Difficulty Level: 1)",Improper Input Validation,100,standard,visible,0,9d4e5e79b87d07944942d37811426c4e3148d446,"Shenanigans","Check the Photo Wall for an image that could not be loaded correctly.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_retrieve_the_photo_of_bjoerns_cat_in_melee_combat_mode",
+Cross-Site Imaging,"Stick <a href=""http://placekitten.com/"" target=""_blank"">cute cross-domain kittens</a> all over our delivery boxes. (Difficulty Level: 5)",Security Misconfiguration,1000,standard,visible,0,ed6fafa2fe184c01a64581004393737449dd6ba4,"Contraption","This challenge would formally have to be in several categories as the developers made multiple gaffes for this to be possible.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/security-misconfiguration.html#_stick_cute_cross_domain_kittens_all_over_our_delivery_boxes",
+Exposed Metrics,"Find the endpoint that serves usage data to be scraped by a <a href=""https://github.com/prometheus/prometheus"">popular monitoring system</a>. (Difficulty Level: 1)",Sensitive Data Exposure,100,standard,visible,0,ab5b8d18378fbcb0f3bc6e9f2b1e3eebc676334e,"Good Practice","Try to guess what URL the endpoint might have.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_find_the_endpoint_that_serves_usage_data_to_be_scraped_by_a_popular_monitoring_system,<pre><code>/* Serve metrics */
+let metricsUpdateLoop: any
+const Metrics = metrics.observeMetrics()
+app.get('/metrics'٬ metrics.serveMetrics())
+errorhandler.title = `${config.get<string>('application.name')} (Express ${utils.version('express')})`
+
+export async function start (readyCallback?: () => void) {
+  const datacreatorEnd = startupGauge.startTimer({ task: 'datacreator' })
+  await sequelize.sync({ force: true })
+  await datacreator()
+  datacreatorEnd()
+  const port = process.env.PORT ?? config.get('server.port')
+  process.env.BASE_PATH = process.env.BASE_PATH ?? config.get('server.basePath')
+
+  metricsUpdateLoop = Metrics.updateLoop()
+
+  server.listen(port٬ () => {
+    logger.info(colors.cyan(`Server listening on port ${colors.bold(`${port}`)}`))
+    startupGauge.set({ task: 'ready' }٬ (Date.now() - startTime) / 1000)
+    if (process.env.BASE_PATH !== '') {
+      logger.info(colors.cyan(`Server using proxy base path ${colors.bold(`${process.env.BASE_PATH}`)} for redirects`))
+    }
+    registerWebsocketEvents(server)
+    if (readyCallback) {
+      readyCallback()
+    }
+  })
+
+}
+
+export function close (exitCode: number | undefined) {
+  if (server) {
+    clearInterval(metricsUpdateLoop)
+    server.close()
+  }
+  if (exitCode !== undefined) {
+    process.exit(exitCode)
+  }
+}</code></pre>",
+Deluxe Fraud,"Obtain a Deluxe Membership without paying for it. (Difficulty Level: 3)",Improper Input Validation,450,standard,visible,0,638524b76976aae9fb41a264fd7c06d813635e1e,,"Look closely at what happens when you attempt to upgrade your account.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_obtain_a_deluxe_membership_without_paying_for_it",
+CSRF,"Change the name of a user by performing Cross-Site Request Forgery from <a href=""http://htmledit.squarefree.com"">another origin</a>. (Difficulty Level: 3)",Broken Access Control,450,standard,visible,0,7f2af07e0e0ac2c54e8ae0665b4aa68762ba63af,,"Find a form which updates the username and then construct a malicious page in the online HTML editor. You probably need an older browser version for this.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/broken-access-control.html#_change_the_name_of_a_user_by_performing_cross_site_request_forgery_from_another_origin",
+Bonus Payload,"Use the bonus payload <code>&lt;iframe width=&quot;100%&quot; height=&quot;166&quot; scrolling=&quot;no&quot; frameborder=&quot;no&quot; allow=&quot;autoplay&quot; src=&quot;https&colon;//w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/771984076&amp;color=%23ff5500&amp;auto_play=true&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&quot;&gt;&lt;/iframe&gt;</code> in the <i>DOM XSS</i> challenge. (Difficulty Level: 1)",XSS,100,standard,visible,0,a81183bb5eaf30e6f5ae3c14acb572976072f4c9,"Shenanigans,Tutorial","Copy + Paste = Solved!,https://pwning.owasp-juice.shop/companion-guide/latest/part2/xss.html#_use_the_bonus_payload_in_the_dom_xss_challenge,<pre><code>filterTable () {
+    let queryParam: string = this.route.snapshot.queryParams.q
+    if (queryParam) {
+      queryParam = queryParam.trim()
+      this.dataSource.filter = queryParam.toLowerCase()
+      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam)
+      this.gridDataSource.subscribe((result: any) => {
+        if (result.length === 0) {
+          this.emptyState = true
+        } else {
+          this.emptyState = false
+        }
+      })
+    } else {
+      this.dataSource.filter = ''
+      this.searchValue = undefined
+      this.emptyState = false
+    }
+  }</code></pre>",
+Reset Uvogin's Password,"Reset Uvogin's password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism with <i>the original answer</i> to his security question. (Difficulty Level: 4)",Sensitive Data Exposure,700,standard,visible,0,76759927fb4e587ad58ca8eb14e0034e55c4c6d3,"OSINT","You might have to do some OSINT on his social media personas to find out his honest answer to the security question.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_reset_uvogins_password_via_the_forgot_password_mechanism,<pre><code>-
+  question: 'Your eldest siblings middle name?'
+-
+  question: ""Mother's maiden name?""
+-
+  question: ""Mother's birth date? (MM/DD/YY)""
+-
+  question: ""Father's birth date? (MM/DD/YY)""
+-
+  question: ""Maternal grandmother's first name?""
+-
+  question: ""Paternal grandmother's first name?""
+-
+  question: 'Name of your favorite pet?'
+-
+  question: ""Last name of dentist when you were a teenager? (Do not include 'Dr.')""
+-
+  question: 'Your ZIP/postal code when you were a teenager?'
+-
+  question: 'Company you first work for as an adult?'
+-
+  question: 'Your favorite book?'
+-
+  question: 'Your favorite movie?'
+-
+  question: 'Number of one of your customer or ID cards?'
+-
+  question: ""What's your favorite place to go hiking?""</code></pre>",
+Meta Geo Stalking,"Determine the answer to John's security question by looking at an upload of him to the Photo Wall and use it to reset his password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism. (Difficulty Level: 2)",Sensitive Data Exposure,250,standard,visible,0,1bf405de0c6cffac953daa8c8d0ae7a72072b3eb,"OSINT","Take a look at the meta data of the corresponding photo.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_determine_the_answer_to_johns_security_question",
+Visual Geo Stalking,"Determine the answer to Emma's security question by looking at an upload of her to the Photo Wall and use it to reset her password via the <a href=""/#/forgot-password"">Forgot Password</a> mechanism. (Difficulty Level: 2)",Sensitive Data Exposure,250,standard,visible,0,974658d2522a1de540e85d925dadcfc1891ccbea,"OSINT","Take a look at the details in the photo to determine the location of where it was taken.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/sensitive-data-exposure.html#_determine_the_answer_to_emmas_security_question",
+Kill Chatbot,"Permanently disable the support chatbot so that it can no longer answer customer queries. (Difficulty Level: 5)",Vulnerable Components,1000,standard,visible,0,2d55d113bdd3535ed2b7170fc2ff43a5ff324b84,"Code Analysis","Think of a way to get a hold of the internal workings on the chatbot API.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_permanently_disable_the_support_chatbot",
+Poison Null Byte,"Bypass a security control with a <a href=""https://hakipedia.com/index.php/Poison_Null_Byte"">Poison Null Byte</a> to access a file not meant for your eyes. (Difficulty Level: 4)",Improper Input Validation,700,standard,visible,0,cfdeea14e8f01b4952722fd0e4a77f1928593c9a,"Prerequisite","Take a look at the details in the photo to determine the location of where it was taken.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/improper-input-validation.html#_bypass_a_security_control_with_a_poison_null_byte",
+Bully Chatbot,"Receive a coupon code from the support chatbot. (Difficulty Level: 1)",Miscellaneous,100,standard,visible,0,9dd704b4c48bd310dd3187971a344c179213562d,"Shenanigans,Brute Force","Just keep asking.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/miscellaneous.html#_receive_a_coupon_code_from_the_support_chatbot",
+Local File Read,"Gain read access to an arbitrary local file on the web server. <em>(This challenge is <strong>potentially harmful</strong> on Heroku!)</em> (Difficulty Level: 5)",Vulnerable Components,1000,standard,visible,0,6cbafed57d94b84630427bb24ab80b31efc578f5,"OSINT,Danger Zone","You should read up on vulnerabilities in popular NodeJs template engines.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/vulnerable-components.html#_gain_read_access_to_an_arbitrary_local_file_on_the_web_server",
+Mass Dispel,"Close multiple ""Challenge solved""-notifications in one go. (Difficulty Level: 1)",Miscellaneous,100,standard,visible,0,e6622ce9a67640b96851c2b1553ceb6690dd26a4,,"Either check the official documentation or inspect a notification UI element directly.,https://pwning.owasp-juice.shop/companion-guide/latest/part2/score-board.html#_close_multiple_challenge_solved_notifications_in_one_go",
+Security Advisory," The Juice Shop is susceptible to a known vulnerability in a library, for which an advisory has already been issued, marking the Juice Shop as <i>known affected</i>. A fix is still pending. <a href=""/#/contact"">Inform the shop</a> about a suitable checksum as proof that you did your due diligence. (Difficulty Level: 3)",Miscellaneous,450,standard,visible,0,c8ac6cef4d859387ee20ef7988807661776b040d,,"Security Advisories are often listed in the security.txt",

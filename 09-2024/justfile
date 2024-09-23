@@ -1,0 +1,8 @@
+up:
+    docker compose up
+
+down:
+    docker compose rm -f
+
+generate-ctf-config:
+    docker run -ti --rm -v $(pwd):/data bkimminich/juice-shop-ctf:snapshot

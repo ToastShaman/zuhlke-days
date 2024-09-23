@@ -1,0 +1,82 @@
+services:
+  ctf:
+    image: ctfd/ctfd
+    ports:
+      - 8000:8000
+
+  juice0:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3000:3000
+
+  juice1:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3001:3000
+
+  juice2:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3002:3000
+  
+  juice3:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3003:3000
+
+  juice4:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3004:3000
+
+  juice5:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3005:3000
+  
+  juice6:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3006:3000
+
+  juice7:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3007:3000
+
+  juice8:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3008:3000
+
+  juice9:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3009:3000
+
+  juice10:
+    image: bkimminich/juice-shop
+    environment:
+      - NODE_ENV=ctf
+    ports:
+      - 3010:3000
