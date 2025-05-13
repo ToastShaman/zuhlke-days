@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from "aws-cdk-lib/aws-ecs-patterns";
+import { Protocol } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 
 export class JuiceShopStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -30,23 +31,27 @@ export class JuiceShopStack extends cdk.Stack {
       }
     });
 
-    new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'CTFd', {
+    const ctfd = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'CTFd', {
       cluster: cluster,
       cpu: 256,
       memoryLimitMiB: 512,
       desiredCount: 1,
       minHealthyPercent: 100,
-      healthCheck: {
-        command: ['CMD-SHELL', 'curl -s --connect-timeout 5 http://localhost:8000/ > /dev/null 2>&1 || exit 1'],
-        interval: cdk.Duration.seconds(30),
-        timeout: cdk.Duration.seconds(5),
-        retries: 5,
-      },
       publicLoadBalancer: true,
       taskImageOptions: {
         image: ecs.ContainerImage.fromRegistry('ctfd/ctfd'),
         containerPort: 8000,
       }
+    });
+
+    ctfd.targetGroup.configureHealthCheck({
+      path: '/',
+      protocol: Protocol.HTTP,
+      healthyHttpCodes: '200-399',
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 3
     });
   };
 };
